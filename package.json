@@ -1,5 +1,6 @@
 {
   "name": "capitol-gains",
+  "version": "0.0.0",
   "private": true,
   "description": "Congressional trading disclosures: a resumable, sharded extraction pipeline with pluggable storage, model and OCR backends.",
   "license": "MIT",

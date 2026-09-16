@@ -1,0 +1,6 @@
+# package.json's "files" allowlist decides what ships. This file exists only so npm
+# stops falling back to the repo .gitignore, which excludes dist/ — the one directory
+# the published package is made of.
+src/
+tsconfig*.json
+jest.config.js
