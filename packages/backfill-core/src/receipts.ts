@@ -21,6 +21,15 @@ export interface ReceiptStore {
   read(identity: string): Promise<Buffer>;
   /** Every receipt of the round, for the stage that publishes them. */
   all(): Promise<Array<{ identity: string; key: string }>>;
+  /**
+   * Forget an item, so the round does it again.
+   *
+   * This is the whole of repair. A receipt is what makes the round skip an item, so a receipt
+   * recording a *failure* is indistinguishable from one recording success as far as the next
+   * pass is concerned — it will skip both. Re-running a pipeline without dropping the receipt
+   * does nothing at all, which is a genuinely confusing way to waste a machine.
+   */
+  drop(identity: string): Promise<void>;
 }
 
 const ROUND_ID = /^[A-Za-z0-9._-]{1,64}$/;
@@ -71,7 +80,38 @@ export function createReceiptStore(config: {
         return identity === null ? [] : [{ identity, key: object.key }];
       });
     },
+    async drop(identity) {
+      await config.store.delete(keyFor(identity));
+    },
   };
+}
+
+/**
+ * Drop the receipts of every item a predicate rejects, so the next run redoes exactly those.
+ *
+ * Pass `dryRun` first. Repair deletes durable state, and "which items are broken" is a claim
+ * worth reading before acting on: on a production round the obvious guess — that the failures
+ * were all one cause — was wrong, and 87% of them shared a cause nobody had suspected.
+ */
+export async function repairRound(config: {
+  receipts: ReceiptStore;
+  /** True to keep the receipt, false to drop it and redo the item. */
+  keep(identity: string, body: Buffer): Promise<boolean> | boolean;
+  dryRun?: boolean;
+  concurrency?: number;
+}): Promise<{ inspected: number; dropped: string[]; dryRun: boolean }> {
+  const dryRun = config.dryRun ?? true;
+  const all = await config.receipts.all();
+  const dropped: string[] = [];
+
+  for (const entry of all) {
+    const body = await config.receipts.read(entry.identity);
+    if (await config.keep(entry.identity, body)) continue;
+    dropped.push(entry.identity);
+    if (!dryRun) await config.receipts.drop(entry.identity);
+  }
+
+  return { inspected: all.length, dropped, dryRun };
 }
 
 /** The items this shard still has to do: its slice, minus what the round already finished. */

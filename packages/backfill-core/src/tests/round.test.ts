@@ -34,6 +34,9 @@ function memoryStore(): DataStore {
     async exists(key) {
       return objects.has(key);
     },
+    async delete(key) {
+      objects.delete(key);
+    },
   };
 }
 

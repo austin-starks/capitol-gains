@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
@@ -150,6 +151,12 @@ export class S3DataStore implements DataStore {
 
   async exists(key: string): Promise<boolean> {
     return (await this.head(key)) !== null;
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.client.send(
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: this.resolve(key) })
+    );
   }
 }
 

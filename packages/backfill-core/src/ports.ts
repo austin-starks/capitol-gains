@@ -35,6 +35,8 @@ export interface DataStore {
   list(prefix: string, limit?: number): Promise<StoredObject[]>;
   head(key: string): Promise<StoredObject | null>;
   exists(key: string): Promise<boolean>;
+  /** Needed for repair: dropping a receipt is how a round is told to redo an item. */
+  delete(key: string): Promise<void>;
 }
 
 export interface CompletionRequest {
