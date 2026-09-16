@@ -17,6 +17,7 @@ export { parseShard, shardIndexOf, shardOwns, type Shard } from "./shard";
 export {
   createReceiptStore,
   pendingForShard,
+  repairRound,
   roundPrefix,
   type ReceiptStore,
 } from "./receipts";
