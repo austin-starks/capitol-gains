@@ -14,6 +14,10 @@ Capitol Gains turns them into rows you can query.
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](./package.json)
 
+![The six patterns: sharding by identity, receipts that survive a re-shard, the single-flight lease, two reads and a reconcile, batch size as observability, and the reduce](./graphic/out/architecture.gif)
+
+<sub>Six patterns, each one shown with the failure it prevents. Source in [`graphic/`](./graphic) — `npm run render` rebuilds it.</sub>
+
 </div>
 
 ---
