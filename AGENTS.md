@@ -1,0 +1,79 @@
+# AGENTS.md
+
+Guidance for coding agents working in this repository. `CLAUDE.md` is a symlink to this file.
+
+## What this repository is
+
+Two packages with a deliberate boundary:
+
+- `packages/backfill-core` — resumable sharded backfills. **Knows nothing about Congress.**
+- `packages/disclosure-lake` — House and Senate PTR extraction. **Knows nothing about S3 or Mongo.**
+
+If a change makes either statement false, the change is wrong. A vendor name belongs in a
+config value, never in a type, a class name or an interface.
+
+## Rules that are not negotiable
+
+**No secrets, no `process.env`.** No package here reads the environment. Storage credentials
+come from the AWS SDK's standard chain; model and OCR credentials arrive through the injected
+port. If you find yourself reaching for `process.env`, add a config field instead.
+
+**Ports stay narrow.** Each interface is the smallest surface the pipeline uses, not a mirror of
+some client's API. `LanguageModel` has one method because extraction only ever needed one — the
+client it replaced had over forty. Resist adding a method for a caller that does not exist yet.
+
+**Strict TypeScript, and no `any`.** `strict`, `noUncheckedIndexedAccess` and
+`exactOptionalPropertyTypes` are all on. When a type fights you, the type is usually right.
+
+**Tests cover the rule that corrupts data**, not the getters. The lease has five tests because
+its failure mode silently poisoned 613 filings. `acquireProviderLease` in the system this came
+from had *zero* tests, which is exactly why that shipped.
+
+## Things that look like bugs and are not
+
+**Batching.** Packing many filings into one model request is roughly ten times cheaper than one
+request each, and ticker resolution deduplicates across a batch. Do not "fix" batching into
+streaming. Tune `batchSize` — that is the observability knob.
+
+**The lease fencing a dispatched attempt.** That is correct while the outcome is unknown. The
+bug was fencing *forever*; reclaiming after `abandonedAfterMs` is the fix. Do not remove the
+fence.
+
+**Re-listing the input every pass.** Looks wasteful, is load-bearing: another machine may have
+finished work in this slice, which is normal after a re-shard.
+
+## Debugging a stalled backfill
+
+Learned expensively. Follow it in order.
+
+1. **Read the function the job is executing, top to bottom, before measuring anything.** Look
+   for `for (… of …) { await … }` in the hot path and for batch-then-process structure. Both are
+   invisible from outside and both produce long silences.
+2. **Read that machine's own log**, not the shared window — one chatty host floods a ~100-line
+   buffer and evicts the line that names the cause.
+3. **Grep for what the machine says, not only for the failures you predicted.** A kernel OOM
+   message will not match a grep for HTTP status codes.
+4. **Count receipts in the store** for progress. Logs roll over; machine state lies.
+5. **Prove one unit of work end to end before fanning out.** One receipt, not thirty-two hosts
+   with healthy CPU.
+
+A note on sampling: a request-bound job idles between responses, so a 12-second CPU sample can
+read as a stall when the process is fine. Use a 60-second window or longer.
+
+## Commits
+
+State what changed and why it was wrong before. Failure modes are the valuable part of the
+history here — if a commit message could describe any project, it is not specific enough.
+
+## Publishing
+
+`packages/*` are published independently, scoped, with `--access public`:
+
+```bash
+cd packages/backfill-core
+npm run build
+npm publish --access public
+```
+
+Publishing from the repository root fails: the workspace root is private with a placeholder
+version. Use the package directory or `npm publish --workspace <name>`.
