@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Rendered graphic output; the committed source builds it.
+graphic/out/
+
+.DS_Store
+*.log
+
+# Nothing in this repo reads a .env, and nothing should start.
+.env
+.env.*
