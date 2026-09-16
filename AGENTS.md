@@ -29,6 +29,21 @@ client it replaced had over forty. Resist adding a method for a caller that does
 its failure mode silently poisoned 613 filings. `acquireProviderLease` in the system this came
 from had *zero* tests, which is exactly why that shipped.
 
+## Never copy pages from a PDF you have not decrypted
+
+Every electronic House PTR sampled — 2015, 2018, 2023, 2024 — is **RC4-encrypted**. `pdf-lib`
+opens one with `ignoreEncryption: true` and then copies its pages as **blank pages, raising no
+error**: the copy carries encrypted streams into a document with no encryption dictionary. The
+page renders empty and yields about one character of text instead of tens of thousands.
+
+So any code that splits, crops or merges a filing must decrypt first. Decrypt with PDFium —
+it opens these with an empty user password — and copy pages out of the decrypted document.
+
+This is silent in every direction. No exception, no warning, and the model dutifully reports
+that the page has no rows, so the filing is recorded as a legitimate extraction failure. It cost
+a production round its page-range splitting before anyone noticed the splits could never have
+worked.
+
 ## Things that look like bugs and are not
 
 **Batching.** Packing many filings into one model request is roughly ten times cheaper than one

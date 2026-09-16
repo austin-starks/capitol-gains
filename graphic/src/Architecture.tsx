@@ -8,13 +8,17 @@ import { theme } from "./theme";
  * Six scenes, one per pattern the pipeline exercises. Each scene states the pattern and the
  * failure it prevents, because the failure is the reason the pattern exists.
  */
+/**
+ * The disclosure problem, in the order someone meets it. Infrastructure appears only where it
+ * changes the data: the lease, because losing it silently fails filings.
+ */
 const SCENES = [
-  { title: "Shard by identity", subtitle: "a stable hash, never a position" },
-  { title: "Receipts, keyed by identity", subtitle: "so a round resumes — and re-shards" },
-  { title: "Single-flight lease", subtitle: "pay once, and never fence forever" },
+  { title: "A trade becomes a PDF", subtitle: "45 days to file, two chambers, no schema" },
+  { title: "A third are photographs", subtitle: "scanned paper, not text" },
+  { title: "OCR lies confidently", subtitle: "one date repeated down 73 rows, at 0.999" },
   { title: "Two reads, then a reconcile", subtitle: "no value comes from OCR text alone" },
-  { title: "Batch size is observability", subtitle: "keep the batching, shrink the batch" },
-  { title: "Reduce", subtitle: "read every receipt, publish each year once" },
+  { title: "Encrypted, so crops come back blank", subtitle: "decrypt before copying a page" },
+  { title: "Rows you can query", subtitle: "every filing, or a receipt saying why not" },
 ] as const;
 
 const Panel: React.FC<{
@@ -63,138 +67,178 @@ const Caption: React.FC<{ scene: number; frame: number }> = ({ scene, frame }) =
   );
 };
 
-/** Sixteen shards claiming disjoint slices of one work list. */
-const ShardScene: React.FC<{ local: number }> = ({ local }) => {
+/** A trade, then the filing it becomes: a PDF on a government site, 45 days later. */
+const FilingScene: React.FC<{ local: number }> = ({ local }) => {
   const { fps } = useVideoConfig();
-  const shards = 16;
+  const steps = [
+    { label: "a member trades", detail: "NVDA · $500,001–$1,000,000" },
+    { label: "45 days to file", detail: "Periodic Transaction Report" },
+    { label: "a PDF appears", detail: "House Clerk · Senate EFD" },
+    { label: "no schema", detail: "two chambers, two formats" },
+  ];
   return (
-    <div style={{ position: "absolute", left: 80, top: 260, display: "flex", gap: 10 }}>
-      {Array.from({ length: shards }, (_, index) => {
-        const appear = spring({ frame: local - index * 3, fps, config: { damping: 200 } });
+    <div style={{ position: "absolute", left: 80, top: 280, display: "flex", gap: 20, alignItems: "center" }}>
+      {steps.map((step, index) => {
+        const appear = spring({ frame: local - index * 18, fps, config: { damping: 200 } });
         return (
-          <div
-            key={index}
-            style={{
-              width: 78,
-              height: 190,
-              borderRadius: 8,
-              background: theme.panel,
-              border: `1px solid ${theme.border}`,
-              opacity: appear,
-              transform: `translateY(${interpolate(appear, [0, 1], [30, 0])}px)`,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              paddingBottom: 12,
-              color: theme.muted,
-              fontFamily: theme.mono,
-              fontSize: 15,
-            }}
-          >
-            <div
+          <React.Fragment key={step.label}>
+            {index > 0 ? (
+              <div style={{ color: theme.muted, fontSize: 30, opacity: appear }}>→</div>
+            ) : null}
+            <Panel
               style={{
-                width: 46,
-                height: interpolate(appear, [0, 1], [0, 110]),
-                background: theme.accent,
-                opacity: 0.55,
-                borderRadius: 4,
-                marginBottom: 10,
+                width: 300,
+                opacity: interpolate(appear, [0, 1], [0.15, 1]),
+                transform: `translateY(${interpolate(appear, [0, 1], [16, 0])}px)`,
+                borderColor: index === 3 ? theme.warn : theme.border,
               }}
-            />
-            {index}/16
-          </div>
+            >
+              <div style={{ fontSize: 23, color: theme.text }}>{step.label}</div>
+              <div style={{ marginTop: 8, fontSize: 17, color: theme.muted }}>{step.detail}</div>
+            </Panel>
+          </React.Fragment>
         );
       })}
     </div>
   );
 };
 
-/** Receipts landing one per finished filing, then the shard count changing underneath them. */
-const ReceiptScene: React.FC<{ local: number }> = ({ local }) => {
+/** Roughly a third of House filings are photographs of paper, not text. */
+const ScanScene: React.FC<{ local: number }> = ({ local }) => {
   const { fps } = useVideoConfig();
-  const total = 48;
-  const landed = Math.min(total, Math.floor(interpolate(local, [0, 90], [0, total], { extrapolateRight: "clamp" })));
-  const reshard = local > 100;
+  const total = 24;
+  const scanned = new Set([2, 5, 6, 9, 13, 14, 18, 21]);
   return (
     <div style={{ position: "absolute", left: 80, top: 250 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(16, 44px)", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 92px)", gap: 12 }}>
         {Array.from({ length: total }, (_, index) => {
-          const on = index < landed;
-          const pop = spring({ frame: local - index * 2, fps, config: { damping: 200 } });
+          const appear = spring({ frame: local - index * 3, fps, config: { damping: 200 } });
+          const isScan = scanned.has(index);
           return (
             <div
               key={index}
               style={{
-                width: 44,
-                height: 34,
+                width: 92,
+                height: 112,
                 borderRadius: 6,
-                border: `1px solid ${on ? theme.ok : theme.border}`,
-                background: on ? "rgba(63,185,80,0.18)" : theme.panel,
-                transform: on ? `scale(${interpolate(pop, [0, 1], [0.7, 1])})` : "scale(1)",
+                border: `1px solid ${isScan ? theme.warn : theme.border}`,
+                background: isScan ? "rgba(210,153,34,0.14)" : theme.panel,
+                opacity: appear,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                gap: 7,
+                padding: "0 12px",
               }}
-            />
+            >
+              {[0, 1, 2, 3].map((line) => (
+                <div
+                  key={line}
+                  style={{
+                    height: 5,
+                    borderRadius: 2,
+                    background: isScan ? theme.warn : theme.accent,
+                    opacity: isScan ? 0.35 : 0.55,
+                    filter: isScan ? "blur(1.4px)" : "none",
+                    width: `${70 + ((index + line) % 3) * 10}%`,
+                  }}
+                />
+              ))}
+            </div>
           );
         })}
       </div>
-      <Panel style={{ marginTop: 28, maxWidth: 1080, fontSize: 20, opacity: reshard ? 1 : 0.35 }}>
-        {reshard
-          ? "16 → 32 shards: only the unfinished work is redivided. Nothing finished is redone."
-          : "one object per finished filing, keyed by chamber:docId"}
+      <Panel style={{ marginTop: 26, width: 1180, fontSize: 20, borderColor: theme.warn }}>
+        The highlighted ones are scans. Nothing in them is text until an OCR engine says so.
       </Panel>
     </div>
   );
 };
 
-/** One owner, the rest held — and the abandoned attempt that must be reclaimable. */
-const LeaseScene: React.FC<{ local: number }> = ({ local }) => {
-  const owner = local > 20;
-  const died = local > 65;
-  const reclaimed = local > 105;
+/** The failure that shaped the whole read design: one date, repeated, at high confidence. */
+const OcrLiesScene: React.FC<{ local: number }> = ({ local }) => {
+  const { fps } = useVideoConfig();
+  const printed = ["04/13/22", "04/19/22", "04/01/22", "04/22/22", "04/08/22", "04/11/22"];
   return (
-    <div style={{ position: "absolute", left: 80, top: 250, display: "flex", gap: 22 }}>
-      {["machine A", "machine B", "machine C"].map((name, index) => {
-        const isOwner = index === 0;
-        const border = isOwner
-          ? died && !reclaimed
-            ? theme.bad
-            : theme.ok
-          : reclaimed && index === 1
-            ? theme.ok
-            : theme.border;
-        return (
-          <Panel key={name} style={{ width: 300, borderColor: border }}>
-            <div style={{ color: theme.muted, fontSize: 18 }}>{name}</div>
-            <div style={{ marginTop: 10, fontSize: 20, color: theme.text }}>
-              {isOwner
-                ? died
-                  ? reclaimed
-                    ? "exited"
-                    : "died mid-call"
-                  : owner
-                    ? "OWNER · paying"
-                    : "claiming…"
-                : reclaimed && index === 1
-                  ? "OWNER · reclaimed"
-                  : owner
-                    ? "HELD · reusing"
-                    : "claiming…"}
-            </div>
-          </Panel>
-        );
-      })}
+    <div style={{ position: "absolute", left: 80, top: 250, display: "flex", gap: 40 }}>
+      <div>
+        <div style={{ fontFamily: theme.sans, fontSize: 20, color: theme.muted, marginBottom: 12 }}>
+          what the page prints
+        </div>
+        {printed.map((date, index) => {
+          const appear = spring({ frame: local - index * 6, fps, config: { damping: 200 } });
+          return (
+            <Panel key={date} style={{ width: 300, marginBottom: 10, fontSize: 21, opacity: appear }}>
+              {date}
+            </Panel>
+          );
+        })}
+      </div>
+      <div>
+        <div style={{ fontFamily: theme.sans, fontSize: 20, color: theme.muted, marginBottom: 12 }}>
+          what the OCR returns
+        </div>
+        {printed.map((_, index) => {
+          const appear = spring({ frame: local - 30 - index * 6, fps, config: { damping: 200 } });
+          return (
+            <Panel
+              key={index}
+              style={{
+                width: 300,
+                marginBottom: 10,
+                fontSize: 21,
+                opacity: appear,
+                borderColor: theme.bad,
+                color: theme.bad,
+              }}
+            >
+              04/21/21
+            </Panel>
+          );
+        })}
+      </div>
+      <Panel style={{ width: 440, alignSelf: "flex-start", borderColor: theme.bad, fontSize: 19 }}>
+        <div style={{ color: theme.text }}>73 rows, one date</div>
+        <div style={{ marginTop: 10, color: theme.muted }}>
+          word confidence 0.92–0.999. Every page-level check passes: the page kept its letters and
+          its dated lines.
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
+/** Why a crop can come back blank: the filing is encrypted and the copy carries ciphertext. */
+const EncryptedScene: React.FC<{ local: number }> = ({ local }) => {
+  const decrypted = local > 70;
+  return (
+    <div style={{ position: "absolute", left: 80, top: 260, display: "flex", gap: 26, alignItems: "flex-start" }}>
+      <Panel style={{ width: 330 }}>
+        <div style={{ color: theme.muted, fontSize: 18 }}>the filed PDF</div>
+        <div style={{ marginTop: 10, fontSize: 21, color: theme.warn }}>RC4-encrypted</div>
+        <div style={{ marginTop: 8, fontSize: 17, color: theme.muted }}>93,640 characters of text</div>
+      </Panel>
+      <div style={{ color: theme.muted, fontSize: 30, paddingTop: 34 }}>→</div>
+      <Panel style={{ width: 360, borderColor: decrypted ? theme.border : theme.bad }}>
+        <div style={{ color: theme.muted, fontSize: 18 }}>copy pages directly</div>
+        <div style={{ marginTop: 10, fontSize: 21, color: theme.bad }}>blank page</div>
+        <div style={{ marginTop: 8, fontSize: 17, color: theme.muted }}>
+          31 characters. No error raised.
+        </div>
+      </Panel>
+      <div style={{ color: theme.muted, fontSize: 30, paddingTop: 34, opacity: decrypted ? 1 : 0.2 }}>→</div>
       <Panel
         style={{
-          width: 420,
-          borderColor: reclaimed ? theme.ok : died ? theme.bad : theme.border,
-          fontSize: 19,
+          width: 400,
+          borderColor: decrypted ? theme.ok : theme.border,
+          opacity: decrypted ? 1 : 0.25,
         }}
       >
-        {reclaimed
-          ? "reclaimed 30 min past the lease, fence cleared"
-          : died
-            ? "fenced forever → 613 of 703 filings failed"
-            : "fenced at dispatch: outcome unknown"}
+        <div style={{ color: theme.muted, fontSize: 18 }}>decrypt first, then copy</div>
+        <div style={{ marginTop: 10, fontSize: 21, color: theme.ok }}>46,638 characters</div>
+        <div style={{ marginTop: 8, fontSize: 17, color: theme.muted }}>
+          the crop the reconciling read needs
+        </div>
       </Panel>
     </div>
   );
@@ -234,65 +278,6 @@ const ReadScene: React.FC<{ local: number }> = ({ local }) => {
         <div style={{ marginTop: 10, color: reconciled ? theme.ok : theme.text }}>
           {reconciled ? "published as printed: 04/01 … 04/22" : "deciding from the page"}
         </div>
-      </Panel>
-    </div>
-  );
-};
-
-/** 250 per pass writes nothing for an hour; 25 checkpoints ten times as often. */
-const BatchScene: React.FC<{ local: number }> = ({ local }) => {
-  const progress = interpolate(local, [0, 120], [0, 1], { extrapolateRight: "clamp" });
-  const rows: Array<{ label: string; size: number; color: string; writes: number }> = [
-    { label: "batchSize 250", size: 250, color: theme.bad, writes: 1 },
-    { label: "batchSize 25", size: 25, color: theme.ok, writes: 10 },
-  ];
-  return (
-    <div style={{ position: "absolute", left: 80, top: 270 }}>
-      {rows.map((row) => (
-        <div key={row.label} style={{ marginBottom: 46 }}>
-          <div style={{ color: theme.muted, fontFamily: theme.mono, fontSize: 20, marginBottom: 10 }}>
-            {row.label}
-          </div>
-          <div
-            style={{
-              position: "relative",
-              width: 1200,
-              height: 46,
-              background: theme.panel,
-              border: `1px solid ${theme.border}`,
-              borderRadius: 8,
-            }}
-          >
-            <div
-              style={{
-                width: `${progress * 100}%`,
-                height: "100%",
-                background: row.color,
-                opacity: 0.28,
-                borderRadius: 8,
-              }}
-            />
-            {Array.from({ length: row.writes }, (_, index) => {
-              const at = (index + 1) / row.writes;
-              return (
-                <div
-                  key={index}
-                  style={{
-                    position: "absolute",
-                    left: `${at * 100}%`,
-                    top: -6,
-                    width: 3,
-                    height: 58,
-                    background: progress >= at ? row.color : theme.border,
-                  }}
-                />
-              );
-            })}
-          </div>
-        </div>
-      ))}
-      <Panel style={{ width: 1200, fontSize: 20 }}>
-        Same cost, same requests. Ten times the checkpoints, and one bad filing blocks 25 instead of 250.
       </Panel>
     </div>
   );
@@ -346,11 +331,11 @@ export const Architecture: React.FC = () => {
         capitol-gains · {scene + 1}/{SCENES.length}
       </div>
       <Caption scene={scene} frame={frame} />
-      {scene === 0 ? <ShardScene local={local} /> : null}
-      {scene === 1 ? <ReceiptScene local={local} /> : null}
-      {scene === 2 ? <LeaseScene local={local} /> : null}
+      {scene === 0 ? <FilingScene local={local} /> : null}
+      {scene === 1 ? <ScanScene local={local} /> : null}
+      {scene === 2 ? <OcrLiesScene local={local} /> : null}
       {scene === 3 ? <ReadScene local={local} /> : null}
-      {scene === 4 ? <BatchScene local={local} /> : null}
+      {scene === 4 ? <EncryptedScene local={local} /> : null}
       {scene === 5 ? <ReduceScene local={local} /> : null}
     </AbsoluteFill>
   );

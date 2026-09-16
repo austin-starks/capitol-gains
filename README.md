@@ -14,9 +14,9 @@ Capitol Gains turns them into rows you can query.
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](./package.json)
 
-![The six patterns: sharding by identity, receipts that survive a re-shard, the single-flight lease, two reads and a reconcile, batch size as observability, and the reduce](./graphic/out/architecture.gif)
+![Six scenes: a trade becomes a PDF, a third of them are photographs, OCR repeats one date down 73 rows at high confidence, two reads and a reconcile, an encrypted filing whose crops come back blank, and the rows that come out](./graphic/out/architecture.gif)
 
-<sub>Six patterns, each one shown with the failure it prevents. Source in [`graphic/`](./graphic) — `npm run render` rebuilds it.</sub>
+<sub>From a filed PDF to a queryable row, each scene showing the failure it has to survive. Source in [`graphic/`](./graphic) — `npm run render` rebuilds it.</sub>
 
 </div>
 
@@ -113,6 +113,12 @@ So no value is taken from the OCR text alone:
 The reconciling read decides from the page, not from either summary. Measured on a filing whose
 OCR gave `04/21/21` for all 73 rows: the published dates came back spread across `04/01`–`04/22`
 exactly as printed.
+
+**Those crops need a decrypted PDF.** Every electronic House PTR sampled is RC4-encrypted, and
+`pdf-lib` copies pages out of an encrypted document as blank pages without raising anything — so
+a crop, a split or a merge silently produces an empty page, and the model correctly reports no
+rows. Decrypt with PDFium first, then copy. It is the single most expensive thing to learn late
+in this pipeline.
 
 ## The lease, and the trap inside it
 
