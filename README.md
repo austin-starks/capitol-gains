@@ -10,7 +10,7 @@ photographs of paper, spread across two chambers with different formats and no c
 
 Capitol Gains turns them into rows you can query.
 
-[![npm](https://img.shields.io/npm/v/@austin-starks/backfill-core?label=%40austin-starks%2Fbackfill-core)](https://www.npmjs.com/package/@austin-starks/backfill-core)
+[![npm](https://img.shields.io/npm/v/congressional-disclosures?label=congressional-disclosures)](https://www.npmjs.com/package/congressional-disclosures)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](./package.json)
 
@@ -22,15 +22,21 @@ Capitol Gains turns them into rows you can query.
 
 ---
 
-## Two packages, one boundary
+## One package, two modules
 
-| Package | What it knows |
+| Module | What it knows |
 |---|---|
-| [`@austin-starks/backfill-core`](./packages/backfill-core) | how to run a resumable, sharded backfill against **any** storage, model and OCR backend. Knows nothing about Congress. |
-| [`@austin-starks/disclosure-lake`](./packages/disclosure-lake) | published-table integrity checks over filing, trade, and event rows — pure functions, tested without S3 or Mongo. Knows nothing about S3 or Mongo. |
+| `src/backfill` | how to run a resumable, sharded backfill against **any** storage, model and OCR backend. Knows nothing about Congress. |
+| `src/integrity.ts` | published-table integrity checks over filing, trade, and event rows — pure functions, tested without S3 or Mongo. Knows nothing about S3 or Mongo. |
 
-The split is the point. The framework had to exist for the pipeline to be testable, and it
-turned out to be the more reusable half.
+```bash
+npm install congressional-disclosures
+```
+
+```ts
+import { runRound, repairRound } from "congressional-disclosures";
+import { auditPoliticalIntegrity } from "congressional-disclosures";
+```
 
 ## No vendors in the type system
 
@@ -136,21 +142,16 @@ that key is poisoned permanently: every later reader fails.
 > already exited. Paying twice for one page costs $0.004. Never reading it again costs every
 > filing that contains it.
 
-`backfill-core` reclaims an abandoned attempt 30 minutes past its lease — long enough that a
+The backfill runtime reclaims an abandoned attempt 30 minutes past its lease — long enough that a
 live call is never stolen, short enough that a round repairs itself.
-
-## Install
-
-```bash
-npm install @austin-starks/backfill-core
-```
 
 ## Repository layout
 
 ```
-packages/backfill-core/     the framework: ports, sharding, receipts, lease, rounds, progress
-packages/disclosure-lake/   the pipeline: House index, Senate EFD, PTR extraction
-graphic/                    Remotion source for the architecture animation
+packages/congressional-disclosures/
+  src/backfill/     the framework: ports, sharding, receipts, lease, rounds, progress
+  src/integrity.ts  published-table checks: completeness, parity, orphans, sanity, freshness
+graphic/            Remotion source for the architecture animation
 ```
 
 ## Development

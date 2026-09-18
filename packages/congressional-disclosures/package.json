@@ -1,0 +1,32 @@
+{
+  "name": "congressional-disclosures",
+  "version": "0.1.0",
+  "description": "U.S. congressional trading disclosures: a resumable sharded backfill runtime plus integrity checks over the published filing, trade, and event tables.",
+  "license": "MIT",
+  "author": "Austin Starks",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/austin-starks/congressional-disclosures.git",
+    "directory": "packages/congressional-disclosures"
+  },
+  "homepage": "https://github.com/austin-starks/congressional-disclosures#readme",
+  "keywords": ["congress", "disclosure", "ptr", "house", "senate", "backfill", "sharding", "idempotent", "s3", "etl", "resumable", "data-quality"],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.716.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "test": "jest"
+  }
+}

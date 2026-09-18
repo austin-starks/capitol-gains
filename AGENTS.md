@@ -4,13 +4,15 @@ Guidance for coding agents working in this repository. `CLAUDE.md` is a symlink 
 
 ## What this repository is
 
-Two packages with a deliberate boundary:
+One package, `packages/congressional-disclosures`, with two modules inside:
 
-- `packages/backfill-core` — resumable sharded backfills. **Knows nothing about Congress.**
-- `packages/disclosure-lake` — House and Senate PTR extraction. **Knows nothing about S3 or Mongo.**
+- `src/backfill` — resumable sharded backfills. **Knows nothing about Congress.**
+- `src/integrity.ts` — published-table checks. **Knows nothing about S3 or Mongo.**
 
-If a change makes either statement false, the change is wrong. A vendor name belongs in a
-config value, never in a type, a class name or an interface.
+The module boundary is deliberate: if a change makes either statement false, the change
+is wrong. A vendor name belongs in a config value, never in a type, a class name or an
+interface. (There used to be two published packages; they were merged because the split
+taxed the only consumer twice and served a hypothetical generic user who never came.)
 
 ## Rules that are not negotiable
 
@@ -82,10 +84,10 @@ history here — if a commit message could describe any project, it is not speci
 
 ## Publishing
 
-`packages/*` are published independently, scoped, with `--access public`:
+The package is published unscoped, with `--access public`:
 
 ```bash
-cd packages/backfill-core
+cd packages/congressional-disclosures
 npm run build
 npm publish --access public
 ```
