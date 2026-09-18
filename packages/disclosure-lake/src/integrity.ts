@@ -390,16 +390,25 @@ export function auditPoliticalIntegrity(input: PoliticalIntegrityInput): Politic
 
   if (input.receipts) {
     const gaps = publicationParityGaps(input.receipts, input.filings);
-    const examples = [
-      ...gaps.missingFromFilings.map((key) => `receipt without row ${key}`),
-      ...gaps.missingFromReceipts.map((key) => `row without receipt ${key}`),
-    ];
-    if (examples.length > 0) {
+    // A receipt with no published row means the reduce did not finish the
+    // round — that fails. A published row with no receipt in THIS round is
+    // expected accumulation across rounds, so it reports as info, not failure.
+    if (gaps.missingFromFilings.length > 0) {
       findings.push(
         finding(
           "publication_parity",
-          examples,
+          gaps.missingFromFilings.map((key) => `receipt without row ${key}`),
           `receipts ${input.receipts.length} vs published filings ${input.filings.length}`
+        )
+      );
+    }
+    if (gaps.missingFromReceipts.length > 0) {
+      findings.push(
+        finding(
+          "publication_parity",
+          gaps.missingFromReceipts.map((key) => `row without receipt ${key}`),
+          `published rows from earlier rounds (${gaps.missingFromReceipts.length})`,
+          "info"
         )
       );
     }

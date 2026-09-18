@@ -96,6 +96,29 @@ describe("lake integrity", () => {
     });
   });
 
+  it("publication parity fails receipts without rows but only informs on earlier rounds' rows", () => {
+    const unfinished = auditPoliticalIntegrity({
+      ...HEALTHY,
+      receipts: [
+        { chamber: "house", docId: "20000001" },
+        { chamber: "house", docId: "20000002" },
+      ],
+    });
+    expect(unfinished.passed).toBe(false);
+    expect(unfinished.findings.map((item) => item.check)).toContain("publication_parity");
+    const accumulated = auditPoliticalIntegrity({
+      ...HEALTHY,
+      filings: [filing("20000001"), filing("19990001")],
+      receipts: [{ chamber: "house", docId: "20000001" }],
+    });
+    expect(accumulated.passed).toBe(true);
+    expect(
+      accumulated.findings.filter(
+        (item) => item.check === "publication_parity" && item.severity === "info"
+      )
+    ).toHaveLength(1);
+  });
+
   it("orphan trades reject a row whose filing failed extraction", () => {
     expect(
       orphanTrades(
