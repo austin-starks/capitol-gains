@@ -27,7 +27,7 @@ Capitol Gains turns them into rows you can query.
 | Package | What it knows |
 |---|---|
 | [`@austin-starks/backfill-core`](./packages/backfill-core) | how to run a resumable, sharded backfill against **any** storage, model and OCR backend. Knows nothing about Congress. |
-| `@austin-starks/disclosure-lake` | how a House PTR and a Senate EFD report are shaped, and how to read one correctly. Knows nothing about S3 or Mongo. |
+| [`@austin-starks/disclosure-lake`](./packages/disclosure-lake) | published-table integrity checks over filing, trade, and event rows — pure functions, tested without S3 or Mongo. Knows nothing about S3 or Mongo. |
 
 The split is the point. The framework had to exist for the pipeline to be testable, and it
 turned out to be the more reusable half.

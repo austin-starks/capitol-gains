@@ -1,0 +1,29 @@
+{
+  "name": "@austin-starks/disclosure-lake",
+  "version": "0.1.0",
+  "description": "Published-table integrity checks for the congressional trading disclosure lake: pure functions over filing, trade, and event rows, testable without S3 or Mongo.",
+  "license": "MIT",
+  "author": "Austin Starks",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/austin-starks/capitol-gains.git",
+    "directory": "packages/disclosure-lake"
+  },
+  "homepage": "https://github.com/austin-starks/capitol-gains#readme",
+  "keywords": ["congress", "disclosure", "ptr", "data-quality", "etl"],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "test": "jest"
+  }
+}
